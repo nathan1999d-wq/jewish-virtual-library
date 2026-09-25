@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Frise des Sages</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#f3f5fa; --surface:#ffffff; --ink:#172040; --muted:#5a6384; --line:#d4d9e8;
+  --techelet:#1f4fa8; --gold:#a8791c;
+  --c-torah:#1f4fa8; --c-philo:#7a3fa0; --c-lead:#b3412e; --c-sci:#1d7a6a; --c-arts:#a8791c;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1426; --surface:#182038; --ink:#e7eaf5; --muted:#9aa3c2; --line:#2b3558;
+  --techelet:#7ea6f0; --gold:#d9b25a;
+  --c-torah:#7ea6f0; --c-philo:#c395e0; --c-lead:#ee8a76; --c-sci:#5fcab5; --c-arts:#d9b25a;
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0f1426; --surface:#182038; --ink:#e7eaf5; --muted:#9aa3c2; --line:#2b3558;
+  --techelet:#7ea6f0; --gold:#d9b25a;
+  --c-torah:#7ea6f0; --c-philo:#c395e0; --c-lead:#ee8a76; --c-sci:#5fcab5; --c-arts:#d9b25a;
+  color-scheme:dark;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Source Sans 3",system-ui,sans-serif;padding-inline:16px;padding-block:32px 64px}
+.wrap{max-width:860px;margin:0 auto}
+h1{font-family:"Frank Ruhl Libre",Georgia,serif;font-weight:900;font-size:clamp(2rem,6vw,3.2rem);line-height:1.05;margin:0;text-wrap:balance}
+h1 span{display:block;color:var(--gold);font-size:.55em;font-weight:500;margin-top:.3em}
+.lede{color:var(--muted);max-width:62ch;margin:.8rem 0 1.5rem}
+.controls{display:flex;flex-wrap:wrap;gap:8px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding-block:10px;z-index:2;border-bottom:1px solid var(--line)}
+.controls input{flex:1 1 200px;font:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.chip{font:600 .85rem "Source Sans 3",sans-serif;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip i{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.chip[aria-pressed="false"]{opacity:.45}
+.chip:focus-visible,input:focus-visible{outline:2px solid var(--techelet);outline-offset:2px}
+.era{margin-top:36px}
+.era h2{font-family:"Frank Ruhl Libre",Georgia,serif;font-size:1.5rem;margin:0}
+.era .span{color:var(--gold);font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.era p.ctx{color:var(--muted);margin:.3rem 0 1rem;max-width:62ch}
+ol{list-style:none;margin:0;padding:0 0 0 22px;border-left:2px solid var(--line);display:grid;gap:14px}
+li{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+li::before{content:"";position:absolute;left:-30px;top:18px;width:12px;height:12px;border-radius:50%;background:var(--c);border:3px solid var(--bg)}
+.top{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.name{font-family:"Frank Ruhl Libre",Georgia,serif;font-weight:700;font-size:1.15rem}
+.heb{font-family:"Frank Ruhl Libre",serif;color:var(--muted)}
+.dates{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--muted);font-size:.9rem}
+.tag{font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--c)}
+li p{margin:.35rem 0 0}
+.empty{color:var(--muted);margin-top:24px}
+footer{color:var(--muted);font-size:.85rem;margin-top:48px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<h1>Frise des Sages<span>Savants et acteurs de l'histoire juive</span></h1>
+<p class="lede">De l'époque biblique à nos jours, les figures qui ont façonné le judaïsme et le monde. Filtrez par domaine ou cherchez un nom. Les dates avant l'ère commune sont traditionnelles ou approximatives.</p>
+<div class="controls" id="controls">
+  <input id="q" type="search" placeholder="Chercher un nom, une œuvre, un lieu…" aria-label="Rechercher">
+</div>
+<div id="tl"></div>
+<p class="empty" id="empty" hidden>Aucun résultat. Essayez un autre nom ou réactivez un domaine.</p>
+<footer>Sélection indicative, forcément incomplète. av. = avant l'ère commune.</footer>
+</div>
+
+<script>
+const CATS={torah:["Torah & Talmud","--c-torah"],philo:["Philosophie & pensée","--c-philo"],lead:["Leaders & histoire","--c-lead"],sci:["Sciences","--c-sci"],arts:["Lettres & arts","--c-arts"]};
+const ERAS=[
+["Époque biblique","vers 1800 – 500 av.","Des patriarches au retour de l'exil de Babylone.",[
+["Abraham","אברהם","vers 1800 av.","lead","Patriarche, père du monothéisme selon la tradition. Quitte Our pour Canaan."],
+["Moïse","משה רבנו","vers 1300 av.","lead","Libère les Hébreux d'Égypte et transmet la Torah au Sinaï. « Moché Rabbénou », le maître par excellence."],
+["David","דוד המלך","vers 1000 av.","lead","Roi d'Israël, fait de Jérusalem sa capitale. Tradition des Psaumes."],
+["Salomon","שלמה","vers 970 av.","lead","Bâtit le Premier Temple. Associé aux Proverbes et à l'Ecclésiaste."],
+["Isaïe","ישעיהו","VIIIe s. av.","philo","Prophète de la justice sociale et de la paix universelle."],
+["Jérémie","ירמיהו","vers 650–570 av.","philo","Prophète de la destruction du Premier Temple (586 av.)."],
+["Ezra le Scribe","עזרא הסופר","Ve s. av.","torah","Ramène la Torah au centre de la vie publique après l'exil. Fondateur de la Grande Assemblée."]]],
+["Second Temple","516 av. – 70","Grande Assemblée, Maccabées, naissance des écoles rabbiniques.",[
+["Judas Maccabée","יהודה המכבי","† 160 av.","lead","Mène la révolte contre les Séleucides. Origine de Hanoucca."],
+["Hillel l'Ancien","הלל הזקן","vers 110 av. – 10","torah","Maître de la douceur : « Ce qui t'est odieux, ne le fais pas à autrui. »"],
+["Shammaï","שמאי","vers 50 av. – 30","torah","Contemporain de Hillel, école plus stricte."],
+["Philon d'Alexandrie","פילון","vers 20 av. – 50","philo","Relie la Bible à la philosophie grecque."],
+["Flavius Josèphe","יוסף בן מתתיהו","37 – vers 100","arts","Historien de la guerre des Juifs contre Rome."],
+["Rabban Yohanan ben Zakkaï","רבן יוחנן בן זכאי","Ier s.","torah","Fonde l'académie de Yavné après la destruction du Temple et sauve la vie juive."]]],
+["Mishna et Talmud","70 – 600","Des Tannaïm aux Amoraïm, en Judée et en Babylonie.",[
+["Rabbi Akiva","רבי עקיבא","vers 50 – 135","torah","Berger devenu le plus grand maître de son temps. Martyr sous Hadrien."],
+["Bar Kokhba","בר כוכבא","† 135","lead","Chef de la dernière révolte contre Rome (132–135)."],
+["Rabbi Chimon bar Yohaï","רבי שמעון בר יוחאי","IIe s.","torah","Élève de Rabbi Akiva. La tradition lui attribue le Zohar."],
+["Rabbi Meïr","רבי מאיר","IIe s.","torah","Tanna majeur. Époux de Brouria, elle-même érudite réputée."],
+["Rabbi Yehouda HaNassi","רבי יהודה הנשיא","vers 135 – 217","torah","Rédige la Mishna, première codification de la Loi orale."],
+["Rav et Chmouel","רב ושמואל","IIIe s.","torah","Fondent les académies de Soura et Néhardéa en Babylonie."],
+["Rav Achi","רב אשי","vers 352 – 427","torah","Principal rédacteur du Talmud de Babylone."]]],
+["Guéonim et âge d'or","600 – 1300","Babylonie, Espagne musulmane, Provence et Rhénanie.",[
+["Rav Saadia Gaon","רב סעדיה גאון","882 – 942","philo","Traduit la Bible en arabe. Premier grand philosophe juif médiéval."],
+["Rabbenou Guershom","רבנו גרשום","vers 960 – 1040","torah","« Lumière de l'exil ». Interdit la polygamie en Ashkenaz."],
+["Salomon ibn Gabirol","שלמה אבן גבירול","vers 1021 – 1058","arts","Poète et philosophe d'Espagne. Auteur de la « Couronne royale »."],
+["Rachi","רש״י","1040 – 1105","torah","De Troyes. Son commentaire de la Bible et du Talmud est étudié partout depuis."],
+["Juda Halevi","יהודה הלוי","vers 1075 – 1141","arts","Poète des « Chants de Sion », auteur du Kouzari."],
+["Abraham ibn Ezra","אברהם אבן עזרא","1089 – 1167","sci","Exégète, grammairien, mathématicien et astronome."],
+["Maïmonide (Rambam)","רמב״ם","1138 – 1204","philo","Médecin, codificateur (Michné Torah) et philosophe (Guide des égarés)."],
+["Nahmanide (Ramban)","רמב״ן","1194 – 1270","torah","De Gérone. Commentateur et kabbaliste. S'installe à Jérusalem."],
+["Moïse de León","משה דה לאון","vers 1240 – 1305","philo","Diffuse le Zohar, texte central de la Kabbale."]]],
+["Expulsions et renouveau","1300 – 1750","Expulsion d'Espagne, Safed, Europe de l'Est, Amsterdam.",[
+["Gersonide (Ralbag)","רלב״ג","1288 – 1344","sci","Philosophe, astronome et mathématicien de Provence."],
+["Don Isaac Abravanel","יצחק אברבנאל","1437 – 1508","lead","Ministre des rois d'Espagne. Choisit l'exil avec son peuple en 1492."],
+["Doña Gracia Nassi","דונה גרציה","1510 – 1569","lead","Banquière. Organise le sauvetage de nombreux conversos."],
+["Rabbi Yossef Karo","רבי יוסף קארו","1488 – 1575","torah","Rédige le Choulhan Aroukh, code de loi juive de référence."],
+["Le Ari (Isaac Louria)","האר״י","1534 – 1572","philo","Kabbaliste de Safed. Concepts de tsimtsoum et tikkoun."],
+["Le Maharal de Prague","מהר״ל","vers 1520 – 1609","torah","Penseur majeur. La légende lui prête le Golem."],
+["Baruch Spinoza","ברוך שפינוזה","1632 – 1677","philo","D'Amsterdam. Philosophe fondateur des Lumières, excommunié par sa communauté."],
+["Glückel de Hameln","גליקל","1646 – 1724","arts","Femme d'affaires. Ses mémoires en yiddish sont un témoignage rare."]]],
+["Hassidisme et modernité","1750 – 1900","Hassidim, Mitnagdim, Haskala et émancipation.",[
+["Le Baal Chem Tov","הבעל שם טוב","1698 – 1760","philo","Fondateur du hassidisme : joie, ferveur et prière du cœur."],
+["Le Gaon de Vilna","הגר״א","1720 – 1797","torah","Génie du Talmud, chef de file des Mitnagdim."],
+["Moses Mendelssohn","משה מנדלסון","1729 – 1786","philo","Père de la Haskala, les Lumières juives."],
+["Rabbi Nahman de Braslav","רבי נחמן מברסלב","1772 – 1810","philo","Maître hassidique, auteur de contes mystiques."],
+["Rabbi Chnéour Zalman de Liadi","בעל התניא","1745 – 1812","philo","Fondateur de Habad, auteur du Tanya."],
+["Adolphe Crémieux","אדולף כרמיה","1796 – 1880","lead","Ministre. Son décret de 1870 donne la citoyenneté française aux Juifs d'Algérie."],
+["Moses Montefiore","משה מונטיפיורי","1784 – 1885","lead","Philanthrope. Construit les premiers quartiers hors des murs de Jérusalem."],
+["Rabbi Samson Raphaël Hirsch","רש״ר הירש","1808 – 1888","torah","Fondateur de la néo-orthodoxie : « Torah im derekh erets »."],
+["Eliezer Ben-Yehoudah","אליעזר בן־יהודה","1858 – 1922","arts","Fait renaître l'hébreu comme langue parlée."]]],
+["XXe siècle","1900 – 2000","Sionisme, Shoah, création de l'État d'Israël.",[
+["Theodor Herzl","בנימין זאב הרצל","1860 – 1904","lead","Fondateur du sionisme politique (Congrès de Bâle, 1897)."],
+["Le Rav Kook","הרב קוק","1865 – 1935","philo","Premier grand rabbin ashkénaze de la Palestine mandataire."],
+["Sigmund Freud","זיגמונד פרויד","1856 – 1939","sci","Fondateur de la psychanalyse."],
+["Albert Einstein","אלברט איינשטיין","1879 – 1955","sci","Théorie de la relativité, prix Nobel de physique 1921."],
+["Franz Kafka","פרנץ קפקא","1883 – 1924","arts","Écrivain de Prague : Le Procès, La Métamorphose."],
+["Chaïm Weizmann","חיים ויצמן","1874 – 1952","lead","Chimiste, premier président de l'État d'Israël."],
+["David Ben Gourion","דוד בן־גוריון","1886 – 1973","lead","Proclame l'État d'Israël le 14 mai 1948. Premier Premier ministre."],
+["Le Hafets Haïm","החפץ חיים","1839 – 1933","torah","Auteur de la Michna Beroura et de lois sur la médisance."],
+["Martin Buber","מרטין בובר","1878 – 1965","philo","Philosophe du dialogue : « Je et Tu »."],
+["Emmanuel Levinas","עמנואל לוינס","1906 – 1995","philo","Philosophe de l'éthique et du visage d'autrui. Lecteur du Talmud."],
+["Golda Meir","גולדה מאיר","1898 – 1978","lead","Première ministre d'Israël de 1969 à 1974."],
+["Le Rabbi de Loubavitch","הרבי מליובאוויטש","1902 – 1994","torah","Menahem Mendel Schneerson. Déploie Habad dans le monde entier."],
+["Rav Yossef Dov Soloveitchik","הגרי״ד סולובייצ׳יק","1903 – 1993","philo","Maître de l'orthodoxie moderne américaine."],
+["Elie Wiesel","אלי ויזל","1928 – 2016","arts","Survivant d'Auschwitz, auteur de La Nuit. Prix Nobel de la paix 1986."],
+["Simone Veil","סימון וייל","1927 – 2017","lead","Rescapée d'Auschwitz, ministre, première présidente du Parlement européen élu."],
+["Rav Ovadia Yossef","הרב עובדיה יוסף","1920 – 2013","torah","Grand rabbin séfarade d'Israël. Codificateur majeur (Yabia Omer)."],
+["Yitzhak Rabin","יצחק רבין","1922 – 1995","lead","Premier ministre, prix Nobel de la paix 1994. Assassiné en 1995."]]],
+["Époque contemporaine","depuis 2000","Penseurs et savants encore lus ou actifs.",[
+["Rav Adin Steinsaltz","הרב עדין שטיינזלץ","1937 – 2020","torah","Traduit et commente l'ensemble du Talmud pour le grand public."],
+["Rabbin Jonathan Sacks","הרב יונתן זקס","1948 – 2020","philo","Grand rabbin du Royaume-Uni, penseur et écrivain."],
+["Daniel Kahneman","דניאל כהנמן","1934 – 2024","sci","Psychologue, prix Nobel d'économie 2002."],
+["Ada Yonath","עדה יונת","née en 1939","sci","Cristallographe, prix Nobel de chimie 2009 pour la structure du ribosome."]]]
+];
+const $=s=>document.querySelector(s),on=new Set(Object.keys(CATS));
+const ctr=$("#controls");
+for(const[k,[l,v]]of Object.entries(CATS)){const b=document.createElement("button");b.className="chip";b.style.setProperty("--c",`var(${v})`);b.setAttribute("aria-pressed","true");b.innerHTML=`<i></i>${l}`;b.onclick=()=>{on.has(k)?on.delete(k):on.add(k);b.setAttribute("aria-pressed",on.has(k));render()};ctr.appendChild(b)}
+const norm=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+function render(){const q=norm($("#q").value.trim());let n=0,h="";
+for(const[t,sp,ctx,ps]of ERAS){const f=ps.filter(p=>on.has(p[3])&&(!q||norm(p.join(" ")).includes(q)));if(!f.length)continue;n+=f.length;
+h+=`<section class="era"><div class="span">${sp}</div><h2>${t}</h2><p class="ctx">${ctx}</p><ol>`+f.map(([nm,hb,d,c,txt])=>`<li style="--c:var(${CATS[c][1]})"><div class="top"><span class="name">${nm}</span><span class="heb" lang="he" dir="rtl">${hb}</span><span class="dates">${d}</span></div><div class="tag">${CATS[c][0]}</div><p>${txt}</p></li>`).join("")+`</ol></section>`}
+$("#tl").innerHTML=h;$("#empty").hidden=n>0}
+$("#q").addEventListener("input",render);render();
+</script>
+</body>
+</html>
